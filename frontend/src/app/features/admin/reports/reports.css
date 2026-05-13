@@ -1,0 +1,32 @@
+/* Estilos para ngx-charts */
+::ng-deep .ngx-charts {
+  --ngx-charts-text-color: rgb(212, 212, 212);
+  --ngx-charts-title-text-color: rgb(255, 255, 255);
+}
+
+::ng-deep .ngx-charts text {
+  fill: rgb(212, 212, 212);
+}
+
+::ng-deep .ngx-charts .tooltip-anchor {
+  fill: rgb(239, 68, 68);
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(23, 23, 23, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(115, 115, 115, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(115, 115, 115, 0.8);
+}

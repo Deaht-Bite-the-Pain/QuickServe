@@ -1,0 +1,287 @@
+<!-- ── HEADER ──────────────────────────────────────────────── -->
+<div class="qa-main-head">
+  <div>
+    <h1 class="qa-main-title">Gestión de Menú</h1>
+    <p style="color:var(--ink-4);font-size:13px;margin-top:4px;">
+      {{ productos.length }} productos en total
+    </p>
+  </div>
+  <button class="qa-btn-primary" (click)="openCreate()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+    Nuevo producto
+  </button>
+</div>
+
+<!-- ── CATEGORY CHIPS ───────────────────────────────────────── -->
+<div class="qa-chips" style="margin-bottom:16px;">
+  <button class="qa-chip"
+          [attr.data-active]="categoriaActiva === 'TODAS' ? 'true' : null"
+          (click)="setCategoriaActiva('TODAS')">
+    Todas ({{ productos.length }})
+  </button>
+  <button *ngFor="let cat of categorias" class="qa-chip"
+          [attr.data-active]="categoriaActiva === cat ? 'true' : null"
+          (click)="setCategoriaActiva(cat)">
+    {{ getCategoriaLabel(cat) }} ({{ contarPorCategoria(cat) }})
+  </button>
+</div>
+
+<!-- ── SEARCH ────────────────────────────────────────────────── -->
+<div class="qa-tools" style="margin-bottom:16px;">
+  <div class="qa-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input [(ngModel)]="searchQuery" (ngModelChange)="filtrar()"
+           placeholder="Buscar por nombre o descripción…"/>
+  </div>
+</div>
+
+<!-- ── TABLE ────────────────────────────────────────────────── -->
+<div class="qa-table-wrap">
+  <table class="qa-table">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Categoría</th>
+        <th>Precio</th>
+        <th>Estado</th>
+        <th style="text-align:right;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of filtrados">
+
+        <td>
+          <div class="qa-name-cell">
+            <b>{{ p.nombre }}</b>
+            <span>{{ p.descripcion }}</span>
+          </div>
+        </td>
+
+        <td>
+          <span class="qa-pill" [style]="getCategoriaQaStyle(p.categoria)">
+            {{ getCategoriaLabel(p.categoria) }}
+          </span>
+        </td>
+
+        <td>
+          <span style="font-family:var(--serif);font-size:15px;color:var(--accent);">
+            ${{ p.precio | number:'1.2-2' }}
+          </span>
+        </td>
+
+        <td>
+          <button class="qa-status"
+                  style="background:none;border:0;cursor:pointer;padding:0;"
+                  (click)="toggleDisponible(p)">
+            <span class="qa-status-dot"
+                  [style.background]="p.disponible ? 'var(--ok)' : 'var(--ink-4)'"></span>
+            <span [style.color]="p.disponible ? 'var(--ok)' : 'var(--ink-4)'">
+              {{ p.disponible ? 'Disponible' : 'No disponible' }}
+            </span>
+          </button>
+        </td>
+
+        <td>
+          <div class="qa-actions">
+            <button class="qa-icon-btn" title="Editar" (click)="openEdit(p)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="qa-icon-btn" title="Eliminar"
+                    style="color:var(--danger);" (click)="confirmDelete(p.id)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+
+      </tr>
+
+      <!-- Empty state -->
+      <tr *ngIf="filtrados.length === 0">
+        <td colspan="5" style="text-align:center;padding:52px 0;color:var(--ink-4);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1" style="display:block;margin:0 auto 12px;opacity:.3;">
+            <path d="M3 3v7a3 3 0 0 0 6 0V3M6 10v11"/>
+            <path d="M21 3v18M17 3c0 3 .6 4.5 2 5V21"/>
+          </svg>
+          <p style="font-size:13px;">No se encontraron productos</p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ── MODAL CREAR / EDITAR ─────────────────────────────────── -->
+<div *ngIf="showModal"
+     style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;">
+
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);"
+       (click)="closeModal()"></div>
+
+  <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <h2 style="font-family:var(--serif);font-size:18px;color:var(--ink);font-style:italic;">
+        {{ editando ? 'Editar producto' : 'Nuevo producto' }}
+      </h2>
+      <button (click)="closeModal()"
+              style="background:none;border:0;color:var(--ink-4);cursor:pointer;line-height:0;padding:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div style="padding:24px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- Nombre -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['nombre'] ? 'var(--danger)' : 'var(--ink-4)'">
+          Nombre del producto *
+        </label>
+        <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: Margherita"
+               (blur)="validateNombreProducto()" (input)="clearError('nombre')"
+               [style.border]="fieldErrors['nombre'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+               style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        <span *ngIf="fieldErrors['nombre']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['nombre'] }}
+        </span>
+      </div>
+
+      <!-- Descripción -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['descripcion'] ? 'var(--danger)' : 'var(--ink-4)'">
+          Descripción
+          <span style="text-transform:none;font-size:10px;opacity:.6;margin-left:6px;">máx. 300 caracteres</span>
+        </label>
+        <textarea [(ngModel)]="form.descripcion" rows="2"
+                  placeholder="Ingredientes o descripción breve…"
+                  (blur)="validateDescripcion()" (input)="clearError('descripcion')"
+                  [style.border]="fieldErrors['descripcion'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+                  style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;resize:none;font-family:inherit;"></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span *ngIf="fieldErrors['descripcion']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ fieldErrors['descripcion'] }}
+          </span>
+          <span style="font-size:10px;margin-left:auto;"
+                [style.color]="(form.descripcion || '').length > 280 ? 'var(--danger)' : 'var(--ink-4)'">
+            {{ (form.descripcion || '').length }}/300
+          </span>
+        </div>
+      </div>
+
+      <!-- Precio + Categoría -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+                 [style.color]="fieldErrors['precio'] ? 'var(--danger)' : 'var(--ink-4)'">
+            Precio ($) *
+          </label>
+          <input type="number" [(ngModel)]="form.precio" step="0.50" min="0.01" max="9999.99" placeholder="0.00"
+                 (blur)="validatePrecio()" (input)="clearError('precio')"
+                 [style.border]="fieldErrors['precio'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+                 style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+          <span *ngIf="fieldErrors['precio']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ fieldErrors['precio'] }}
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+                 [style.color]="fieldErrors['categoria'] ? 'var(--danger)' : 'var(--ink-4)'">
+            Categoría *
+          </label>
+          <select [(ngModel)]="form.categoria"
+                  (change)="validateCategoria()"
+                  [style.border]="fieldErrors['categoria'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+                  style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;cursor:pointer;font-family:inherit;">
+            <option value="">— Elegí —</option>
+            <option *ngFor="let cat of categorias" [value]="cat">{{ getCategoriaLabel(cat) }}</option>
+          </select>
+          <span *ngIf="fieldErrors['categoria']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ fieldErrors['categoria'] }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Disponible toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;">
+        <span style="font-size:13px;color:var(--ink-2);">Disponible en el menú</span>
+        <button (click)="form.disponible = !form.disponible"
+                style="position:relative;width:44px;height:24px;border-radius:999px;border:0;cursor:pointer;transition:background .2s;"
+                [style.background]="form.disponible ? 'var(--accent)' : 'var(--border)'">
+          <span style="position:absolute;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:left .2s;"
+                [style.left]="form.disponible ? '23px' : '3px'"></span>
+        </button>
+      </div>
+
+      <!-- Error general -->
+      <div *ngIf="fieldErrors['general']"
+           style="background:color-mix(in oklab,var(--danger) 12%,transparent);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent);color:var(--danger);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;">
+        {{ fieldErrors['general'] }}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);">
+      <button (click)="closeModal()"
+              style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 20px;color:var(--ink-4);font-size:13px;cursor:pointer;font-family:var(--mono);letter-spacing:.04em;">
+        Cancelar
+      </button>
+      <button class="qa-btn-primary" (click)="save()" [disabled]="saving">
+        {{ saving ? 'Guardando…' : (editando ? 'Guardar cambios' : 'Crear producto') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── MODAL CONFIRMAR ELIMINAR ─────────────────────────────── -->
+<div *ngIf="showDeleteConfirm"
+     style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;">
+
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);"
+       (click)="cancelDelete()"></div>
+
+  <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:340px;padding:32px 28px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--danger)"
+         stroke-width="1.2" style="display:block;margin:0 auto 16px;">
+      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+    </svg>
+    <h3 style="font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:8px;font-style:italic;">
+      ¿Eliminar producto?
+    </h3>
+    <p style="font-size:13px;color:var(--ink-4);margin-bottom:24px;">
+      Esta acción no se puede deshacer.
+    </p>
+    <div style="display:flex;gap:12px;">
+      <button (click)="cancelDelete()"
+              style="flex:1;background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--ink-4);font-size:13px;cursor:pointer;">
+        Cancelar
+      </button>
+      <button (click)="doDelete()"
+              style="flex:1;background:var(--danger);border:0;border-radius:var(--r-sm);padding:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+        Eliminar
+      </button>
+    </div>
+  </div>
+</div>

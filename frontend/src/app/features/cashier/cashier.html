@@ -1,0 +1,199 @@
+<div class="qa-screen" style="overflow:hidden;">
+
+  <!-- ── TOP BAR ──────────────────────────────────────────── -->
+  <div class="qa-top-bar">
+    <div class="qa-top-left">
+      <span class="qa-top-brand">QuickServe</span>
+      <div class="qa-top-divider"></div>
+      <span class="qa-top-role">
+        <!-- cash register icon -->
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <rect x="2" y="6" width="20" height="14" rx="2"/>
+          <path d="M2 10h20M7 15h.01M12 15h.01M17 15h.01M7 19h.01M12 19h.01M17 19h.01"/>
+          <path d="M9 3l3 3 3-3"/>
+        </svg>
+        Vista Caja
+      </span>
+    </div>
+    <div class="qa-top-right">
+      <span class="qa-top-name">{{ nombre }}</span>
+      <button class="qa-top-logout" (click)="logout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.4"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 4h-4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M9 12h11"/>
+        </svg>
+        Salir
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CASHIER LAYOUT ────────────────────────────────────── -->
+  <div class="qa-cashier">
+
+    <!-- LEFT: lista de pagos pendientes -->
+    <div class="qa-c-list">
+
+      <div class="qa-c-list-h">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.4">
+          <path d="M4 4h16v16H4z M9 4v16 M4 9h5 M4 14h5"/>
+        </svg>
+        <h3>Pagos pendientes</h3>
+        <span class="qa-card-count" *ngIf="pagos.length > 0">{{ pagos.length }}</span>
+      </div>
+
+      <div class="qa-c-items">
+
+        <!-- Empty -->
+        <div *ngIf="pagos.length === 0"
+             style="padding:48px 0;text-align:center;color:var(--ink-4);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1"
+               style="display:block;margin:0 auto 12px;opacity:.3;">
+            <path d="M5 12.5L10 17L19 7.5"/>
+          </svg>
+          <p style="font-size:13px;">No hay pagos pendientes</p>
+        </div>
+
+        <!-- Items -->
+        <div class="qa-c-item"
+             *ngFor="let pago of pagos"
+             [attr.data-active]="pagoSeleccionado?.id === pago.id ? 'true' : null"
+             (click)="seleccionar(pago)">
+
+          <div class="qa-c-item-h">
+            <b>Pedido #{{ pago.pedidoId }}</b>
+            <span class="qa-c-amt">${{ pago.monto | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="qa-c-item-meta">
+            <span>Mesa {{ pago.numeroMesa }}</span>
+            <span>{{ pago.fechaCreacion | date:'HH:mm' }}</span>
+            <span style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:2px 8px;border-radius:999px;"
+                  style="text-transform:uppercase;"
+                  [style.background]="'color-mix(in oklab,#d4a437 15%,transparent)'"
+                  [style.color]="'#d4a437'">
+              PENDIENTE
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: detalle del pago seleccionado -->
+    <div class="qa-c-detail">
+
+      <!-- Empty state -->
+      <div *ngIf="!pagoSeleccionado" class="qa-c-empty-detail">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width=".8" style="opacity:.2;margin-bottom:8px;">
+          <rect x="2" y="6" width="20" height="14" rx="2"/>
+          <path d="M2 10h20M7 15h.01M12 15h.01M17 15h.01"/>
+        </svg>
+        <h3>Seleccioná un pago</h3>
+        <p>Elegí un pago de la lista para procesarlo</p>
+      </div>
+
+      <!-- Detalle -->
+      <div *ngIf="pagoSeleccionado" style="display:flex;flex-direction:column;height:100%;">
+
+        <!-- Header del detalle -->
+        <div class="qa-c-detail-h">
+          <span class="qa-mono">PEDIDO #{{ pagoSeleccionado.pedidoId }}</span>
+          <h2>${{ pagoSeleccionado.monto | number:'1.2-2' }}</h2>
+          <span class="qa-c-table">Mesa {{ pagoSeleccionado.numeroMesa }}</span>
+        </div>
+
+        <!-- Resumen -->
+        <div class="qa-c-summary">
+          <div class="qa-c-line">
+            <b>Estado</b>
+            <span style="font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:color-mix(in oklab,#d4a437 15%,transparent);color:#d4a437;padding:2px 10px;border-radius:999px;">
+              {{ pagoSeleccionado.estado }}
+            </span>
+          </div>
+          <div class="qa-c-line">
+            <b>Registrado</b>
+            <span>{{ pagoSeleccionado.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="qa-c-total">
+            <span>Total</span>
+            <span>${{ pagoSeleccionado.monto | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <p style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px;">
+          Método de pago
+        </p>
+        <div class="qa-c-methods">
+
+          <button class="qa-c-method"
+                  [attr.data-active]="metodoPago === 'EFECTIVO' ? 'true' : null"
+                  (click)="metodoPago = 'EFECTIVO'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M6 12h.01M18 12h.01"/>
+            </svg>
+            <b>Efectivo</b>
+          </button>
+
+          <button class="qa-c-method"
+                  [attr.data-active]="metodoPago === 'TARJETA' ? 'true' : null"
+                  (click)="metodoPago = 'TARJETA'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+              <rect x="2" y="5" width="20" height="14" rx="2"/>
+              <path d="M2 10h20"/>
+              <path d="M6 15h4"/>
+            </svg>
+            <b>Tarjeta</b>
+          </button>
+
+          <button class="qa-c-method"
+                  [attr.data-active]="metodoPago === 'TRANSFERENCIA' ? 'true' : null"
+                  (click)="metodoPago = 'TRANSFERENCIA'">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+              <path d="M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4"/>
+            </svg>
+            <b>Transfer.</b>
+          </button>
+
+        </div>
+
+        <!-- Mensaje de feedback -->
+        <div *ngIf="mensaje"
+             style="margin-bottom:16px;padding:12px 16px;border-radius:var(--r-sm);font-size:13px;"
+             [style.background]="mensaje.includes('Error') ? 'color-mix(in oklab,var(--danger) 12%,transparent)' : 'color-mix(in oklab,var(--ok) 12%,transparent)'"
+             [style.color]="mensaje.includes('Error') ? 'var(--danger)' : 'var(--ok)'">
+          {{ mensaje }}
+        </div>
+
+        <!-- Botón confirmar pago -->
+        <button class="qa-c-confirm" (click)="procesarPago()" [disabled]="procesando">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.5L10 17L19 7.5"/>
+          </svg>
+          {{ procesando ? 'Procesando…' : 'Confirmar pago' }}
+        </button>
+
+        <!-- Botón rechazar -->
+        <button (click)="rechazarPago()" [disabled]="procesando"
+                style="margin-top:10px;background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;width:100%;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--danger);cursor:pointer;transition:background .15s;">
+          Rechazar pago
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,261 @@
+<!-- ── HEADER ──────────────────────────────────────────────── -->
+<div class="qa-main-head">
+  <div>
+    <h1 class="qa-main-title">Usuarios</h1>
+    <p style="color:var(--ink-4);font-size:13px;margin-top:4px;">Gestiona el personal del restaurante</p>
+  </div>
+  <button class="qa-btn-primary" (click)="openCreate()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+    Nuevo usuario
+  </button>
+</div>
+
+<!-- ── TOOLS BAR ────────────────────────────────────────────── -->
+<div class="qa-tools">
+  <div class="qa-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
+           placeholder="Buscar por nombre o email…"/>
+  </div>
+  <div class="qa-tabs">
+    <button [attr.data-active]="filterStatus === 'all' ? 'true' : null"
+            (click)="filterStatus = 'all'; applyFilters()">Todos</button>
+    <button [attr.data-active]="filterStatus === 'active' ? 'true' : null"
+            (click)="filterStatus = 'active'; applyFilters()">Activos</button>
+    <button [attr.data-active]="filterStatus === 'inactive' ? 'true' : null"
+            (click)="filterStatus = 'inactive'; applyFilters()">Inactivos</button>
+  </div>
+</div>
+
+<!-- ── TABLE ────────────────────────────────────────────────── -->
+<div class="qa-table-wrap">
+  <table class="qa-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Email</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th style="text-align:right;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of filteredUsers">
+
+        <td>
+          <div class="qa-name-cell">
+            <b>{{ user.nombre }}</b>
+          </div>
+        </td>
+
+        <td>
+          <span class="qa-mono">{{ user.email }}</span>
+        </td>
+
+        <td>
+          <span class="qa-pill"
+                [class.qa-pill-admin]="user.rol === 'ADMIN'"
+                [class.qa-pill-waiter]="user.rol === 'MESERO'"
+                [class.qa-pill-kitchen]="user.rol === 'COCINERO'"
+                [class.qa-pill-cashier]="user.rol === 'CAJERO'">
+            {{ getRolLabel(user.rol) }}
+          </span>
+        </td>
+
+        <td>
+          <span class="qa-status">
+            <span class="qa-status-dot"
+                  [style.background]="user.activo ? 'var(--ok)' : 'var(--ink-4)'"></span>
+            <span [style.color]="user.activo ? 'var(--ok)' : 'var(--ink-4)'">
+              {{ user.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </span>
+        </td>
+
+        <td>
+          <div class="qa-actions">
+            <button class="qa-icon-btn" title="Editar" (click)="openEdit(user)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="qa-icon-btn"
+                    [title]="user.activo ? 'Desactivar' : 'Activar'"
+                    [style.color]="user.activo ? 'var(--danger)' : 'var(--ok)'"
+                    (click)="toggleStatus(user)">
+              <!-- Desactivar icon -->
+              <svg *ngIf="user.activo" width="14" height="14" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="10" cy="11" r="6"/>
+                <path d="M22 4L2 20"/>
+              </svg>
+              <!-- Activar icon -->
+              <svg *ngIf="!user.activo" width="14" height="14" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M3 21v-1a7 7 0 0 1 14 0v1"/>
+                <path d="M19 8v6M22 11h-6"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+
+      </tr>
+
+      <!-- Empty state -->
+      <tr *ngIf="filteredUsers.length === 0">
+        <td colspan="5" style="text-align:center;padding:52px 0;color:var(--ink-4);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1" style="display:block;margin:0 auto 12px;opacity:.3;">
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M3 21v-1a7 7 0 0 1 14 0v1"/>
+          </svg>
+          <p style="font-size:13px;">No se encontraron usuarios</p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Row count -->
+<div class="qa-foot-count">{{ filteredUsers.length }} usuario(s) encontrado(s)</div>
+
+
+<!-- ── MODAL CREAR / EDITAR ─────────────────────────────────── -->
+<div *ngIf="showModal"
+     style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;">
+
+  <!-- Backdrop -->
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);"
+       (click)="closeModal()"></div>
+
+  <!-- Panel -->
+  <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <h2 style="font-family:var(--serif);font-size:18px;color:var(--ink);font-style:italic;">
+        {{ editingUser ? 'Editar usuario' : 'Nuevo usuario' }}
+      </h2>
+      <button (click)="closeModal()"
+              style="background:none;border:0;color:var(--ink-4);cursor:pointer;line-height:0;padding:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:24px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- Nombre -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['nombre'] ? 'var(--danger)' : 'var(--ink-4)'">
+          Nombre completo *
+        </label>
+        <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: Juan Pérez"
+               (blur)="validateNombre()" (input)="clearError('nombre')"
+               [style.border]="fieldErrors['nombre'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+               style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        <span *ngIf="fieldErrors['nombre']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['nombre'] }}
+        </span>
+      </div>
+
+      <!-- Email -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['email'] ? 'var(--danger)' : 'var(--ink-4)'">
+          Correo electrónico *
+        </label>
+        <input type="email" [(ngModel)]="form.email" placeholder="ejemplo@correo.com"
+               (blur)="validateEmail()" (input)="clearError('email')"
+               [style.border]="fieldErrors['email'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+               style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        <span *ngIf="fieldErrors['email']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['email'] }}
+        </span>
+      </div>
+
+      <!-- Password -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:8px;"
+               [style.color]="fieldErrors['password'] ? 'var(--danger)' : 'var(--ink-4)'">
+          Contraseña {{ editingUser ? '' : '*' }}
+          <span *ngIf="editingUser" style="text-transform:none;font-size:10px;opacity:.6;">(vacío = sin cambio)</span>
+        </label>
+        <input type="password" [(ngModel)]="form.password" placeholder="Mín. 8 caracteres, 1 mayúscula, 1 número"
+               (blur)="validatePassword()" (input)="clearError('password')"
+               [style.border]="fieldErrors['password'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+               style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        <!-- Indicador de fortaleza -->
+        <div *ngIf="form.password" style="display:flex;gap:4px;margin-top:2px;">
+          <div style="flex:1;height:3px;border-radius:2px;transition:background .2s;"
+               [style.background]="passwordStrength ? 'var(--danger)' : 'var(--border)'"></div>
+          <div style="flex:1;height:3px;border-radius:2px;transition:background .2s;"
+               [style.background]="passwordStrength === 'medium' || passwordStrength === 'strong' ? '#d4a437' : 'var(--border)'"></div>
+          <div style="flex:1;height:3px;border-radius:2px;transition:background .2s;"
+               [style.background]="passwordStrength === 'strong' ? 'var(--ok)' : 'var(--border)'"></div>
+          <span style="font-size:10px;font-family:var(--mono);letter-spacing:.04em;margin-left:6px;"
+                [style.color]="passwordStrength === 'weak' ? 'var(--danger)' : passwordStrength === 'medium' ? '#d4a437' : 'var(--ok)'">
+            {{ passwordStrength === 'weak' ? 'débil' : passwordStrength === 'medium' ? 'media' : 'fuerte' }}
+          </span>
+        </div>
+        <span *ngIf="fieldErrors['password']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['password'] }}
+        </span>
+      </div>
+
+      <!-- Rol -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['rol'] ? 'var(--danger)' : 'var(--ink-4)'">
+          Rol *
+        </label>
+        <select [(ngModel)]="form.rol" (change)="validateRol()"
+                [style.border]="fieldErrors['rol'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+                style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;cursor:pointer;font-family:inherit;">
+          <option value="">— Seleccioná un rol —</option>
+          <option value="MESERO">Mesero</option>
+          <option value="COCINERO">Cocinero</option>
+          <option value="CAJERO">Cajero</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+        <span *ngIf="fieldErrors['rol']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['rol'] }}
+        </span>
+      </div>
+
+      <!-- Error general (ej: email duplicado) -->
+      <div *ngIf="fieldErrors['general']"
+           style="background:color-mix(in oklab,var(--danger) 12%,transparent);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent);color:var(--danger);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;">
+        {{ fieldErrors['general'] }}
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);">
+      <button (click)="closeModal()"
+              style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 20px;color:var(--ink-4);font-size:13px;cursor:pointer;font-family:var(--mono);letter-spacing:.04em;">
+        Cancelar
+      </button>
+      <button class="qa-btn-primary" (click)="saveUser()" [disabled]="saving">
+        {{ saving ? 'Guardando…' : (editingUser ? 'Guardar cambios' : 'Crear usuario') }}
+      </button>
+    </div>
+  </div>
+</div>

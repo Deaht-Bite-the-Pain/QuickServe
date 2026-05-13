@@ -1,0 +1,183 @@
+# ============================================================
+#  QuickServe — STACK COMPLETO
+#  Levanta MySQL + todos los microservicios + API Gateway
+#
+#  Requisito previo: tener Java 17 y Maven instalados,
+#  o dejar que Docker los descargue con el multi-stage build.
+#
+#  Uso:
+#    docker-compose up --build          # primera vez (compila JARs)
+#    docker-compose up -d               # arrancar en background
+#    docker-compose down                # apagar
+#    docker-compose logs -f user-service  # ver logs de un servicio
+# ============================================================
+
+services:
+
+  # ── BASE DE DATOS ───────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: quickserve-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3306:3306"
+    volumes:
+      - quickserve-mysql-data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${DB_PASSWORD:-TuNuevaClave123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - quickserve-net
+
+  # ── MICROSERVICIO: USUARIOS (8081) ──────────────────────────
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    container_name: quickserve-users
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - quickserve-net
+
+  # ── MICROSERVICIO: PEDIDOS (8082) ───────────────────────────
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    container_name: quickserve-orders
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+    ports:
+      - "8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - quickserve-net
+
+  # ── MICROSERVICIO: MENÚ (8083) ──────────────────────────────
+  menu-service:
+    build:
+      context: ./backend/menu-service
+      dockerfile: Dockerfile
+    container_name: quickserve-menu
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+    ports:
+      - "8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - quickserve-net
+
+  # ── MICROSERVICIO: PAGOS (8084) ─────────────────────────────
+  payment-service:
+    build:
+      context: ./backend/payment-service
+      dockerfile: Dockerfile
+    container_name: quickserve-payments
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+      ORDER_SERVICE_URL: http://order-service:8082
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      order-service:
+        condition: service_started
+    networks:
+      - quickserve-net
+
+  # ── MICROSERVICIO: REPORTES (8085) ──────────────────────────
+  report-service:
+    build:
+      context: ./backend/report-service
+      dockerfile: Dockerfile
+    container_name: quickserve-reports
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - quickserve-net
+
+  # ── MICROSERVICIO: INVENTARIO (8086) ────────────────────────
+  inventory-service:
+    build:
+      context: ./backend/inventory-service
+      dockerfile: Dockerfile
+    container_name: quickserve-inventory
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PASSWORD: ${DB_PASSWORD:-TuNuevaClave123}
+    ports:
+      - "8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - quickserve-net
+
+  # ── API GATEWAY (8080) ──────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: quickserve-gateway
+    restart: unless-stopped
+    environment:
+      USER_SERVICE_URL:      http://user-service:8081
+      ORDER_SERVICE_URL:     http://order-service:8082
+      MENU_SERVICE_URL:      http://menu-service:8083
+      PAYMENT_SERVICE_URL:   http://payment-service:8084
+      REPORT_SERVICE_URL:    http://report-service:8085
+      INVENTORY_SERVICE_URL: http://inventory-service:8086
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - order-service
+      - menu-service
+      - payment-service
+      - report-service
+      - inventory-service
+    networks:
+      - quickserve-net
+
+volumes:
+  quickserve-mysql-data:
+    name: quickserve-mysql-data
+
+networks:
+  quickserve-net:
+    name: quickserve-net
+    driver: bridge

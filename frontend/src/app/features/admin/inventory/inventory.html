@@ -1,0 +1,417 @@
+<!-- ── HEADER ──────────────────────────────────────────────── -->
+<div class="qa-main-head">
+  <div>
+    <h1 class="qa-main-title">Inventario</h1>
+    <p style="color:var(--ink-4);font-size:13px;margin-top:4px;">
+      Gestiona los insumos y stock de la cocina
+    </p>
+  </div>
+  <button class="qa-btn-primary" (click)="abrirNuevo()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+    Nuevo insumo
+  </button>
+</div>
+
+<!-- ── KPI CARDS ─────────────────────────────────────────────── -->
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;">
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;">
+    <div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4);margin-bottom:12px;">
+      Total de insumos
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+      <span style="font-family:var(--serif);font-size:36px;color:var(--ink);line-height:1;">
+        {{ stats.total }}
+      </span>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.2" style="opacity:.25;">
+        <path d="M21 8l-9-5L3 8v8l9 5 9-5V8z"/>
+        <path d="M12 3v18M3 8l9 5 9-5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div style="background:color-mix(in oklab,var(--ok) 8%,transparent);border:1px solid color-mix(in oklab,var(--ok) 20%,transparent);border-radius:var(--r-md);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4);">
+        Stock normal
+      </span>
+      <span style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;background:color-mix(in oklab,var(--ok) 20%,transparent);color:var(--ok);padding:3px 8px;border-radius:999px;">
+        OPTIMAL
+      </span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+      <span style="font-family:var(--serif);font-size:36px;color:var(--ink);line-height:1;">
+        {{ stats.normal }}
+      </span>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ok)"
+           stroke-width="1.4" style="opacity:.6;">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9 12.5L11 14.5L15.5 10" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div style="background:color-mix(in oklab,var(--danger) 8%,transparent);border:1px solid color-mix(in oklab,var(--danger) 20%,transparent);border-radius:var(--r-md);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-4);">
+        Stock bajo
+      </span>
+      <span style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;background:color-mix(in oklab,var(--danger) 20%,transparent);color:var(--danger);padding:3px 8px;border-radius:999px;">
+        CRITICAL
+      </span>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;">
+      <span style="font-family:var(--serif);font-size:36px;color:var(--danger);line-height:1;">
+        {{ stats.bajo }}
+      </span>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)"
+           stroke-width="1.4" style="opacity:.6;">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── SEARCH & FILTER ───────────────────────────────────────── -->
+<div class="qa-tools" style="margin-bottom:16px;">
+  <div class="qa-search">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.5">
+      <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input [(ngModel)]="searchTerm" (input)="onSearch()" placeholder="Buscar insumo…"/>
+  </div>
+  <div class="qa-tabs">
+    <button [attr.data-active]="filterStatus === 'Todos' ? 'true' : null"
+            (click)="filterStatus = 'Todos'; onFilterChange()">Todos</button>
+    <button [attr.data-active]="filterStatus === 'Stock normal' ? 'true' : null"
+            (click)="filterStatus = 'Stock normal'; onFilterChange()">Normal</button>
+    <button [attr.data-active]="filterStatus === 'Stock bajo' ? 'true' : null"
+            (click)="filterStatus = 'Stock bajo'; onFilterChange()">Bajo</button>
+  </div>
+</div>
+
+<!-- ── TABLE ────────────────────────────────────────────────── -->
+<div class="qa-table-wrap">
+  <table class="qa-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th style="text-align:center;">Unidad</th>
+        <th style="text-align:right;">Cant. actual</th>
+        <th style="text-align:right;">Mínimo</th>
+        <th style="text-align:center;">Estado</th>
+        <th>Última act.</th>
+        <th style="text-align:right;">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let insumo of filteredInsumos; trackBy: trackById"
+          [style.border-left]="insumo.bajoStock ? '3px solid var(--danger)' : ''">
+
+        <td>
+          <div class="qa-name-cell">
+            <b>{{ insumo.nombre }}</b>
+          </div>
+        </td>
+
+        <td>
+          <span style="font-size:12px;color:var(--ink-4);">{{ insumo.descripcion }}</span>
+        </td>
+
+        <td style="text-align:center;">
+          <span class="qa-mono" style="font-size:12px;">{{ insumo.unidad }}</span>
+        </td>
+
+        <td style="text-align:right;">
+          <span class="qa-mono"
+                [style.color]="insumo.bajoStock ? 'var(--danger)' : 'var(--ink)'">
+            {{ insumo.cantidad | number:'1.1-2' }}
+          </span>
+        </td>
+
+        <td style="text-align:right;">
+          <span class="qa-mono" style="color:var(--ink-4);">
+            {{ insumo.stockMinimo | number:'1.1-2' }}
+          </span>
+        </td>
+
+        <td style="text-align:center;">
+          <span style="font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:3px 10px;border-radius:999px;"
+                [style.background]="insumo.bajoStock ? 'color-mix(in oklab,var(--danger) 15%,transparent)' : 'color-mix(in oklab,var(--ok) 15%,transparent)'"
+                [style.color]="insumo.bajoStock ? 'var(--danger)' : 'var(--ok)'">
+            {{ insumo.bajoStock ? 'BAJO' : 'NORMAL' }}
+          </span>
+        </td>
+
+        <td>
+          <span style="font-size:11px;color:var(--ink-4);">
+            {{ insumo.fechaActualizacion | date:'dd/MM/yy HH:mm' }}
+          </span>
+        </td>
+
+        <td>
+          <div class="qa-actions">
+            <button class="qa-icon-btn" title="Editar" (click)="abrirEditar(insumo)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="qa-icon-btn" title="Ajustar stock"
+                    style="color:var(--accent);" (click)="abrirAjuste(insumo)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M12 3v4M12 17v4M4.22 6.22l2.83 2.83M16.95 16.95l2.83 2.83M3 12h4M17 12h4M4.22 17.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+              </svg>
+            </button>
+            <button class="qa-icon-btn" title="Eliminar"
+                    style="color:var(--danger);" (click)="eliminarInsumo(insumo.id)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+
+      </tr>
+
+      <!-- Empty state -->
+      <tr *ngIf="filteredInsumos.length === 0">
+        <td colspan="8" style="text-align:center;padding:52px 0;color:var(--ink-4);">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1" style="display:block;margin:0 auto 12px;opacity:.3;">
+            <path d="M21 8l-9-5L3 8v8l9 5 9-5V8z"/>
+            <path d="M12 3v18M3 8l9 5 9-5"/>
+          </svg>
+          <p style="font-size:13px;">No se encontraron insumos</p>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ── MODAL NUEVO / EDITAR INSUMO ─────────────────────────── -->
+<div *ngIf="showModalInsumo"
+     style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;">
+
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);"
+       (click)="cerrarModalInsumo()"></div>
+
+  <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:440px;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <h2 style="font-family:var(--serif);font-size:18px;color:var(--ink);font-style:italic;">
+        {{ modoEdicion ? 'Editar insumo' : 'Nuevo insumo' }}
+      </h2>
+      <button (click)="cerrarModalInsumo()"
+              style="background:none;border:0;color:var(--ink-4);cursor:pointer;line-height:0;padding:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div style="padding:24px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- Nombre -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['nombre'] ? 'var(--danger)' : 'var(--ink-4)'">Nombre *</label>
+        <input type="text" [(ngModel)]="formNombre" placeholder="Ej: Harina de trigo"
+               (input)="clearError('nombre')"
+               [style.border]="fieldErrors['nombre'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+               style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        <span *ngIf="fieldErrors['nombre']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['nombre'] }}
+        </span>
+      </div>
+
+      <!-- Descripción -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);">
+          Descripción <span style="opacity:.5;text-transform:none;">(opcional)</span>
+        </label>
+        <input type="text" [(ngModel)]="formDescripcion" placeholder="Descripción breve"
+               style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+      </div>
+
+      <!-- Unidad -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+               [style.color]="fieldErrors['unidad'] ? 'var(--danger)' : 'var(--ink-4)'">Unidad de medida *</label>
+        <input type="text" [(ngModel)]="formUnidad" placeholder="Ej: kg, litros, unidades"
+               (input)="clearError('unidad')"
+               [style.border]="fieldErrors['unidad'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+               style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        <span *ngIf="fieldErrors['unidad']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ fieldErrors['unidad'] }}
+        </span>
+      </div>
+
+      <!-- Cantidad + Stock mínimo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+                 [style.color]="fieldErrors['cantidad'] ? 'var(--danger)' : 'var(--ink-4)'">
+            {{ modoEdicion ? 'Ver ajustes →' : 'Cantidad inicial *' }}
+          </label>
+          <input *ngIf="!modoEdicion" type="number" [(ngModel)]="formCantidad" min="0" step="1" placeholder="0"
+                 (input)="clearError('cantidad')"
+                 [style.border]="fieldErrors['cantidad'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+                 style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:var(--mono);"/>
+          <span *ngIf="modoEdicion" style="font-size:12px;color:var(--ink-4);padding:10px 0;">
+            Usá "Ajustar stock" para cambiar la cantidad.
+          </span>
+          <span *ngIf="fieldErrors['cantidad']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ fieldErrors['cantidad'] }}
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;"
+                 [style.color]="fieldErrors['stockMinimo'] ? 'var(--danger)' : 'var(--ink-4)'">Stock mínimo *</label>
+          <input type="number" [(ngModel)]="formStockMinimo" min="0" step="1" placeholder="0"
+                 (input)="clearError('stockMinimo')"
+                 [style.border]="fieldErrors['stockMinimo'] ? '1px solid var(--danger)' : '1px solid var(--border)'"
+                 style="background:var(--bg);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:var(--mono);"/>
+          <span *ngIf="fieldErrors['stockMinimo']" style="font-size:11px;color:var(--danger);display:flex;align-items:center;gap:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ fieldErrors['stockMinimo'] }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Error general -->
+      <div *ngIf="errorForm"
+           style="background:color-mix(in oklab,var(--danger) 12%,transparent);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent);color:var(--danger);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;">
+        {{ errorForm }}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);">
+      <button (click)="cerrarModalInsumo()"
+              style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 20px;color:var(--ink-4);font-size:13px;cursor:pointer;font-family:var(--mono);letter-spacing:.04em;">
+        Cancelar
+      </button>
+      <button class="qa-btn-primary" (click)="guardarInsumo()" [disabled]="guardando">
+        {{ guardando ? 'Guardando…' : (modoEdicion ? 'Guardar cambios' : 'Crear insumo') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── MODAL AJUSTAR STOCK ──────────────────────────────────── -->
+<div *ngIf="showModalAjuste"
+     style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;">
+
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);"
+       (click)="cerrarModalAjuste()"></div>
+
+  <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:360px;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <h2 style="font-family:var(--serif);font-size:18px;color:var(--ink);font-style:italic;">
+        Ajustar stock
+      </h2>
+      <button (click)="cerrarModalAjuste()"
+              style="background:none;border:0;color:var(--ink-4);cursor:pointer;line-height:0;padding:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div style="padding:24px;display:flex;flex-direction:column;gap:14px;">
+
+      <!-- Info del insumo -->
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);margin-bottom:4px;">
+          Insumo
+        </div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px;">
+          {{ insumoAjustando?.nombre }}
+        </div>
+        <div style="font-size:12px;color:var(--ink-4);">
+          Stock actual:
+          <span class="qa-mono"
+                [style.color]="insumoAjustando?.bajoStock ? 'var(--danger)' : 'var(--ink)'">
+            {{ insumoAjustando?.cantidad | number:'1.1-2' }} {{ insumoAjustando?.unidad }}
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="errorAjuste"
+           style="background:color-mix(in oklab,var(--danger) 12%,transparent);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent);color:var(--danger);border-radius:var(--r-sm);padding:10px 14px;font-size:12px;">
+        {{ errorAjuste }}
+      </div>
+
+      <!-- Tipo -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);">
+          Tipo de ajuste
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button (click)="ajusteTipo = 'ENTRADA'"
+                  style="padding:10px;border-radius:var(--r-sm);border:1px solid;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;"
+                  [style.background]="ajusteTipo === 'ENTRADA' ? 'var(--ok)' : 'transparent'"
+                  [style.border-color]="ajusteTipo === 'ENTRADA' ? 'var(--ok)' : 'var(--border)'"
+                  [style.color]="ajusteTipo === 'ENTRADA' ? '#fff' : 'var(--ink-4)'">
+            + Entrada
+          </button>
+          <button (click)="ajusteTipo = 'SALIDA'"
+                  style="padding:10px;border-radius:var(--r-sm);border:1px solid;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;"
+                  [style.background]="ajusteTipo === 'SALIDA' ? 'var(--danger)' : 'transparent'"
+                  [style.border-color]="ajusteTipo === 'SALIDA' ? 'var(--danger)' : 'var(--border)'"
+                  [style.color]="ajusteTipo === 'SALIDA' ? '#fff' : 'var(--ink-4)'">
+            − Salida
+          </button>
+        </div>
+      </div>
+
+      <!-- Cantidad -->
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);">
+          Cantidad
+        </label>
+        <input type="number" [(ngModel)]="ajusteCantidad" min="0.01" step="0.01" placeholder="0"
+               style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:var(--mono);"/>
+      </div>
+
+      <!-- Preview nuevo stock -->
+      <div *ngIf="ajusteCantidad && ajusteCantidad > 0"
+           style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:var(--ink-4);">Nuevo stock:</span>
+        <span class="qa-mono" style="font-size:16px;font-weight:700;"
+              [style.color]="nuevaCantidad < 0 ? 'var(--danger)' : 'var(--ok)'">
+          {{ nuevaCantidad | number:'1.1-2' }} {{ insumoAjustando?.unidad }}
+        </span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);">
+      <button (click)="cerrarModalAjuste()"
+              style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 20px;color:var(--ink-4);font-size:13px;cursor:pointer;font-family:var(--mono);letter-spacing:.04em;">
+        Cancelar
+      </button>
+      <button class="qa-btn-primary" (click)="confirmarAjuste()" [disabled]="ajustando">
+        {{ ajustando ? 'Aplicando…' : 'Confirmar ajuste' }}
+      </button>
+    </div>
+  </div>
+</div>

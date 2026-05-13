@@ -1,0 +1,32 @@
+# ── Variables de entorno (contraseñas) ──────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Maven build artifacts ────────────────────────────────────────
+target/
+*.jar
+*.war
+*.ear
+
+# ── IntelliJ IDEA ───────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ── VS Code ─────────────────────────────────────────────────────
+.vscode/
+
+# ── Claude Code (datos personales) ──────────────────────────────
+.claude/
+
+# ── Node / Angular ───────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+
+# ── OS ──────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

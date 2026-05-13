@@ -1,0 +1,251 @@
+<div class="qa-screen">
+
+  <!-- ── TOP BAR ────────────────────────────────────────── -->
+  <div class="qa-top-bar">
+    <div class="qa-top-left">
+      <span class="qa-top-brand">QuickServe</span>
+      <div class="qa-top-divider"></div>
+      <span class="qa-top-role">
+        <!-- utensils icon -->
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M3 3v18M7 3c0 4-2 5-2 9h4c0-4-2-5-2-9zM21 3c-3 0-4 5-4 8h4M17 11v10"/>
+        </svg>
+        Vista Mesero
+      </span>
+    </div>
+    <div class="qa-top-right">
+      <span class="qa-top-name">{{ nombre }}</span>
+      <button class="qa-top-logout" (click)="logout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 4h-4a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M9 12h11"/>
+        </svg>
+        Salir
+      </button>
+    </div>
+  </div>
+
+  <!-- ── MAIN GRID ──────────────────────────────────────── -->
+  <div class="qa-waiter">
+
+    <!-- LEFT: menu + category filters -->
+    <div class="qa-w-left">
+
+      <!-- Category chips -->
+      <div class="qa-chips">
+        <button
+          *ngFor="let cat of categorias"
+          class="qa-chip"
+          [attr.data-active]="categoriaActiva === cat ? 'true' : null"
+          (click)="setCat(cat)">
+          {{ getCategoriaLabel(cat) }}
+        </button>
+      </div>
+
+      <!-- Product grid -->
+      <div class="qa-prod-grid" *ngIf="productosFiltrados.length > 0; else sinProductos">
+        <article class="qa-prod" *ngFor="let p of productosFiltrados">
+          <div class="qa-prod-info">
+            <h4>{{ p.nombre }}</h4>
+            <p>{{ p.descripcion }}</p>
+            <span class="qa-prod-price">${{ p.precio | number:'1.2-2' }}</span>
+          </div>
+
+          <!-- Add button (when 0 in cart) -->
+          <button class="qa-prod-add" *ngIf="getCantidadEnCarrito(p.id) === 0" (click)="agregar(p)" aria-label="Agregar">
+            ＋
+          </button>
+
+          <!-- Qty control (when in cart) -->
+          <div class="qa-mini-qty" *ngIf="getCantidadEnCarrito(p.id) > 0">
+            <button (click)="quitar(p)">−</button>
+            <span>{{ getCantidadEnCarrito(p.id) }}</span>
+            <button (click)="agregar(p)">+</button>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #sinProductos>
+        <div style="text-align:center;padding:48px 0;color:var(--ink-4);">
+          <p style="font-family:var(--serif);font-size:20px;">Sin productos disponibles</p>
+          <p style="font-size:13px;margin-top:6px;">Probá con otra categoría</p>
+        </div>
+      </ng-template>
+
+    </div><!-- /qa-w-left -->
+
+    <!-- RIGHT: cart + requests + orders -->
+    <div class="qa-w-right">
+
+      <!-- ── CART CARD ──────────────────────────── -->
+      <div class="qa-card">
+        <div class="qa-card-h">
+          <!-- cart icon -->
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 6h2l1.6 10.2a2 2 0 0 0 2 1.7h7.8a2 2 0 0 0 2-1.6L21 9H7"/>
+            <circle cx="10" cy="20.5" r="1.2" fill="currentColor" stroke="none"/>
+            <circle cx="17" cy="20.5" r="1.2" fill="currentColor" stroke="none"/>
+          </svg>
+          Carrito
+          <span class="qa-card-count" *ngIf="!carritoVacio">{{ totalUnidades }}</span>
+        </div>
+
+        <!-- Table selector -->
+        <div class="qa-cart-table-sel">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>
+          </svg>
+          <select [(ngModel)]="numeroMesa">
+            <option value="">Seleccioná una mesa</option>
+            <option *ngFor="let m of mesas" [value]="m">Mesa {{ m }}</option>
+          </select>
+        </div>
+
+        <!-- Empty cart -->
+        <div class="qa-cart-empty" *ngIf="carritoVacio">
+          Seleccioná productos del menú
+        </div>
+
+        <!-- Items list -->
+        <div class="qa-cart-list-w" *ngIf="!carritoVacio">
+          <div class="qa-cart-row" *ngFor="let item of carrito">
+            <div>
+              <b>{{ item.producto.nombre }}</b>
+              <span style="color:var(--accent);font-family:var(--serif);margin-left:8px;">${{ (item.producto.precio * item.cantidad) | number:'1.2-2' }}</span>
+            </div>
+            <div class="qa-mini-qty">
+              <button (click)="quitar(item.producto)">−</button>
+              <span>{{ item.cantidad }}</span>
+              <button (click)="agregar(item.producto)">+</button>
+            </div>
+          </div>
+
+          <!-- Total -->
+          <div style="display:flex;justify-content:space-between;padding:10px 12px 0;font-family:var(--serif);font-size:18px;color:var(--ink);">
+            <span>Total</span>
+            <span style="color:var(--accent);">${{ totalCarrito | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <!-- Feedback messages -->
+        <div *ngIf="errorMsg" style="margin-top:8px;padding:10px 12px;border-radius:var(--r-sm);font-size:12px;background:color-mix(in oklab,var(--danger) 12%,transparent);border:1px solid color-mix(in oklab,var(--danger) 30%,transparent);color:var(--danger);">
+          {{ errorMsg }}
+        </div>
+        <div *ngIf="successMsg" style="margin-top:8px;padding:10px 12px;border-radius:var(--r-sm);font-size:12px;background:color-mix(in oklab,#16a34a 12%,transparent);border:1px solid color-mix(in oklab,#16a34a 30%,transparent);color:#16a34a;">
+          {{ successMsg }}
+        </div>
+
+        <!-- Send button -->
+        <button class="qa-cart-send" style="margin-top:10px;" (click)="enviarPedido()" [disabled]="enviando || carritoVacio">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11l18-7-7 18-3-8-8-3z"/>
+          </svg>
+          {{ enviando ? 'Enviando…' : 'Enviar a cocina' }}
+        </button>
+      </div>
+
+      <!-- ── CUSTOMER REQUESTS (solicitudes) ────── -->
+      <div class="qa-req" *ngIf="solicitudes.length > 0">
+        <div class="qa-req-h">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2H4.5L6 16z" stroke-linejoin="round"/>
+            <path d="M10 21a2 2 0 0 0 4 0"/>
+          </svg>
+          Solicitudes de clientes
+          <span class="qa-card-count" style="margin-left:auto;">{{ solicitudes.length }}</span>
+        </div>
+
+        <div *ngFor="let s of solicitudes; let last = last" [style.margin-bottom]="last ? '0' : '10px'">
+          <div class="qa-req-card">
+            <div class="qa-req-card-h">
+              <b>{{ s.clienteNombre }}</b>
+              <span>Mesa {{ s.numeroMesa }} · ${{ s.total | number:'1.2-2' }}</span>
+            </div>
+            <div class="qa-req-items">
+              <ng-container *ngFor="let d of s.detalles; let lastD = last">
+                {{ d.cantidad }}× {{ d.nombreProducto }}<ng-container *ngIf="!lastD">, </ng-container>
+              </ng-container>
+            </div>
+            <div class="qa-req-actions">
+              <button class="qa-btn-accept" (click)="aceptarSolicitud(s.id)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.5L10 17L19 7.5"/>
+                </svg>
+                Aceptar
+              </button>
+              <button class="qa-btn-reject" (click)="rechazarSolicitud(s.id)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+                  <path d="M6 6l12 12M18 6L6 18"/>
+                </svg>
+                Rechazar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ACTIVE ORDERS ──────────────────────── -->
+      <div class="qa-card">
+        <div class="qa-card-h">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+            <rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>
+          </svg>
+          Mis pedidos activos
+        </div>
+
+        <div class="qa-orders">
+
+          <div *ngIf="misPedidos.length === 0" class="qa-cart-empty">
+            No tenés pedidos activos
+          </div>
+
+          <div class="qa-order" *ngFor="let pedido of misPedidos"
+               [style.opacity]="(pedido.estado === 'CANCELADO' || pedido.estado === 'ENTREGADO') ? '0.5' : '1'">
+
+            <div class="qa-order-h">
+              <div>
+                <span class="qa-order-num">#{{ pedido.id }}</span>
+                <span class="qa-order-table">Mesa {{ pedido.numeroMesa }}</span>
+              </div>
+              <!-- Status badge -->
+              <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;"
+                    [style]="getEstadoBadgeStyle(pedido.estado)">
+                {{ getEstadoLabel(pedido.estado) }}
+              </span>
+            </div>
+
+            <div class="qa-order-items">
+              <ng-container *ngFor="let d of pedido.detalles; let last = last">
+                {{ d.cantidad }}× {{ d.nombreProducto }}<ng-container *ngIf="!last">, </ng-container>
+              </ng-container>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span class="qa-order-total">${{ pedido.total | number:'1.2-2' }}</span>
+
+              <!-- Cancel if PENDIENTE -->
+              <button *ngIf="pedido.estado === 'PENDIENTE'"
+                      (click)="cancelarPedido(pedido.id)"
+                      style="font-size:11px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;background:none;border:0;color:var(--danger);cursor:pointer;">
+                Cancelar
+              </button>
+
+              <!-- Deliver if LISTO -->
+              <button *ngIf="pedido.estado === 'LISTO'"
+                      (click)="marcarEntregado(pedido)"
+                      class="qa-btn-accept"
+                      style="padding:8px 14px;font-size:11px;gap:5px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.5L10 17L19 7.5"/>
+                </svg>
+                Entregar y cobrar
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /qa-orders -->
+      </div>
+
+    </div><!-- /qa-w-right -->
+  </div><!-- /qa-waiter -->
+
+</div><!-- /qa-screen -->

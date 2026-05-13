@@ -1,0 +1,346 @@
+<!-- ── HEADER ──────────────────────────────────────────────── -->
+<div class="qa-main-head">
+  <div>
+    <h1 class="qa-main-title">Reportes</h1>
+    <p style="color:var(--ink-4);font-size:13px;margin-top:4px;">Estadísticas del restaurante</p>
+  </div>
+  <button class="qa-btn-primary" (click)="abrirModal()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </svg>
+    Generar nuevo
+  </button>
+</div>
+
+<!-- ── 2-COLUMN GRID ─────────────────────────────────────────── -->
+<div class="qa-reports-grid">
+
+  <!-- LEFT — Lista de reportes -->
+  <div class="qa-rep-list">
+
+    <div class="qa-rep-section-h">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.5">
+        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+      </svg>
+      Reportes generados
+    </div>
+
+    <div *ngIf="reportes.length === 0"
+         style="padding:32px 0;text-align:center;color:var(--ink-4);font-size:13px;">
+      Sin reportes generados
+    </div>
+
+    <div *ngFor="let reporte of reportes; trackBy: trackByIndex"
+         class="qa-rep-card"
+         [attr.data-active]="selectedReporte?.id === reporte.id ? 'true' : null"
+         (click)="seleccionarReporte(reporte)">
+
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ reporte.nombre }}
+          </div>
+          <div style="font-size:11px;color:var(--ink-4);">
+            {{ reporte.fechaCreacion | slice:0:10 }}
+          </div>
+        </div>
+        <button class="qa-rep-x" title="Eliminar"
+                (click)="eliminarReporte(reporte.id); $event.stopPropagation()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.8">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <span class="qa-rep-tag">{{ formatTipo(reporte.tipo) }}</span>
+    </div>
+
+  </div>
+
+  <!-- RIGHT — Detalle del reporte -->
+  <div class="qa-rep-detail">
+
+    <!-- Placeholder vacío -->
+    <div *ngIf="!selectedReporte"
+         style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:280px;color:var(--ink-4);">
+      <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width=".8" style="opacity:.25;margin-bottom:16px;">
+        <path d="M3 20h18"/>
+        <rect x="5" y="10" width="3" height="10" rx=".5"/>
+        <rect x="10.5" y="4" width="3" height="16" rx=".5"/>
+        <rect x="16" y="13" width="3" height="7" rx=".5"/>
+      </svg>
+      <p style="font-size:14px;">Seleccioná un reporte para ver sus detalles</p>
+    </div>
+
+    <!-- Contenido -->
+    <div *ngIf="selectedReporte">
+
+      <div style="margin-bottom:20px;">
+        <h3 style="font-family:var(--serif);font-size:20px;color:var(--ink);font-style:italic;margin-bottom:4px;">
+          {{ selectedReporte.nombre }}
+        </h3>
+        <p style="font-size:12px;color:var(--ink-4);">
+          {{ selectedReporte.fechaCreacion | slice:0:10 }}
+        </p>
+      </div>
+
+      <ng-container [ngSwitch]="selectedReporte.tipo">
+
+        <!-- ──────────────────────────────── -->
+        <!-- VENTA_DIARIA                      -->
+        <!-- ──────────────────────────────── -->
+        <div *ngSwitchCase="'VENTA_DIARIA'">
+
+          <!-- Summary cards -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+            <div style="background:color-mix(in oklab,var(--ok) 10%,transparent);border:1px solid color-mix(in oklab,var(--ok) 25%,transparent);border-radius:var(--r-md);padding:16px;">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);margin-bottom:8px;">
+                Total vendido
+              </div>
+              <div class="qa-money">{{ totalVendido }}</div>
+            </div>
+            <div style="background:color-mix(in oklab,var(--accent) 10%,transparent);border:1px solid color-mix(in oklab,var(--accent) 25%,transparent);border-radius:var(--r-md);padding:16px;">
+              <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);margin-bottom:8px;">
+                Transacciones
+              </div>
+              <div class="qa-money">{{ totalPedidos }}</div>
+            </div>
+          </div>
+
+          <!-- Métodos de pago -->
+          <div class="qa-rep-section-h">Métodos de pago</div>
+          <div *ngIf="metodosPago.length === 0"
+               style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px;">
+            Sin datos para el rango seleccionado
+          </div>
+          <div class="qa-bars" *ngIf="metodosPago.length > 0">
+            <div class="qa-bar-row" *ngFor="let m of metodosPago; let i = index; trackBy: trackByIndex">
+              <div class="qa-bar-meta">
+                <span>{{ m.nombre }}</span>
+                <span [style.color]="colorFor(i)">
+                  {{ m.cantidad }} pago{{ m.cantidad !== 1 ? 's' : '' }} · {{ m.porcentaje }}%
+                </span>
+              </div>
+              <div class="qa-bar-track">
+                <div class="qa-bar-fill" [style.width.%]="m.porcentaje"
+                     [style.background]="colorFor(i)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────────────────────────── -->
+        <!-- PRODUCTOS_MAS_VENDIDOS            -->
+        <!-- ──────────────────────────────── -->
+        <div *ngSwitchCase="'PRODUCTOS_MAS_VENDIDOS'">
+
+          <div class="qa-rep-section-h">Top productos por cantidad</div>
+          <div *ngIf="productosTable.length === 0"
+               style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px;">
+            Sin datos
+          </div>
+          <div class="qa-bars" *ngIf="productosTable.length > 0">
+            <div class="qa-bar-row"
+                 *ngFor="let p of productosTable; let i = index; trackBy: trackByIndex">
+              <div class="qa-bar-meta">
+                <span>{{ p.nombre }}</span>
+                <span>
+                  {{ p.cantidad }} uds ·
+                  <span style="color:var(--ok);">${{ p.ganancia | number:'1.2-2' }}</span>
+                </span>
+              </div>
+              <div class="qa-bar-track">
+                <div class="qa-bar-fill"
+                     [style.width.%]="barPct(p.cantidad, maxVal(productosTable, 'cantidad'))"
+                     [style.background]="colorFor(i)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="productosTable.length > 0" style="margin-top:24px;">
+            <div class="qa-rep-section-h">Tabla de productos</div>
+            <table class="qa-rep-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Producto</th>
+                  <th style="text-align:right;">Cant.</th>
+                  <th style="text-align:right;">Ganancia</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of productosTable; let i = index; trackBy: trackByIndex">
+                  <td style="color:var(--ink-4);">{{ i + 1 }}</td>
+                  <td>{{ p.nombre }}</td>
+                  <td style="text-align:right;color:var(--ink-4);">{{ p.cantidad }}</td>
+                  <td style="text-align:right;color:var(--ok);">${{ p.ganancia | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ──────────────────────────────── -->
+        <!-- GANANCIAS_MENSUAL                 -->
+        <!-- ──────────────────────────────── -->
+        <div *ngSwitchCase="'GANANCIAS_MENSUAL'">
+
+          <div class="qa-rep-section-h">Ganancias por mes</div>
+          <div *ngIf="mesesTable.length === 0"
+               style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px;">
+            Sin datos
+          </div>
+          <div class="qa-bars" *ngIf="mesesTable.length > 0">
+            <div class="qa-bar-row"
+                 *ngFor="let g of mesesTable; let i = index; trackBy: trackByIndex">
+              <div class="qa-bar-meta">
+                <span>{{ g.mes }}</span>
+                <span style="color:var(--ok);">${{ g.total | number:'1.2-2' }}</span>
+              </div>
+              <div class="qa-bar-track">
+                <div class="qa-bar-fill"
+                     [style.width.%]="barPct(g.total, maxVal(mesesTable, 'total'))"
+                     [style.background]="colorFor(i)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="mesesTable.length > 0"
+               style="margin-top:20px;background:color-mix(in oklab,var(--ok) 10%,transparent);border:1px solid color-mix(in oklab,var(--ok) 25%,transparent);border-radius:var(--r-md);padding:16px;">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-4);margin-bottom:8px;">
+              Total acumulado
+            </div>
+            <div class="qa-money">${{ totalAcumulado | number:'1.2-2' }}</div>
+            <div style="font-size:11px;color:var(--ink-4);margin-top:6px;">
+              {{ mesesTable.length }} mes{{ mesesTable.length !== 1 ? 'es' : '' }} con actividad
+            </div>
+          </div>
+        </div>
+
+        <!-- ──────────────────────────────── -->
+        <!-- DESEMPENIO_MESEROS                -->
+        <!-- ──────────────────────────────── -->
+        <div *ngSwitchCase="'DESEMPENIO_MESEROS'">
+
+          <div class="qa-rep-section-h">Ganancia generada por mesero</div>
+          <div *ngIf="meseseroTable.length === 0"
+               style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px;">
+            Sin datos
+          </div>
+          <div class="qa-bars" *ngIf="meseseroTable.length > 0">
+            <div class="qa-bar-row"
+                 *ngFor="let m of meseseroTable; let i = index; trackBy: trackByIndex">
+              <div class="qa-bar-meta">
+                <span>{{ m.nombre }}</span>
+                <span>
+                  {{ m.pedidos }} pedido{{ m.pedidos !== 1 ? 's' : '' }} ·
+                  <span style="color:var(--ok);">${{ m.ganancia | number:'1.2-2' }}</span>
+                </span>
+              </div>
+              <div class="qa-bar-track">
+                <div class="qa-bar-fill"
+                     [style.width.%]="barPct(m.ganancia, maxVal(meseseroTable, 'ganancia'))"
+                     [style.background]="colorFor(i)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="meseseroTable.length > 0" style="margin-top:24px;">
+            <div class="qa-rep-section-h">Tabla de meseros</div>
+            <table class="qa-rep-table">
+              <thead>
+                <tr>
+                  <th>Mesero</th>
+                  <th style="text-align:right;">Pedidos</th>
+                  <th style="text-align:right;">Ganancia</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let m of meseseroTable; trackBy: trackByIndex">
+                  <td>{{ m.nombre }}</td>
+                  <td style="text-align:right;color:var(--ink-4);">{{ m.pedidos }}</td>
+                  <td style="text-align:right;color:var(--ok);">${{ m.ganancia | number:'1.2-2' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ── MODAL GENERAR ────────────────────────────────────────── -->
+<div *ngIf="showModal"
+     style="position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;">
+
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);"
+       (click)="cerrarModal()"></div>
+
+  <div style="position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);">
+      <h2 style="font-family:var(--serif);font-size:18px;color:var(--ink);font-style:italic;">
+        Generar nuevo reporte
+      </h2>
+      <button (click)="cerrarModal()"
+              style="background:none;border:0;color:var(--ink-4);cursor:pointer;line-height:0;padding:4px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.5">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);">
+          Tipo de reporte
+        </label>
+        <select [(ngModel)]="formTipo"
+                style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;cursor:pointer;font-family:inherit;">
+          <option value="" disabled>Seleccioná un tipo…</option>
+          <option *ngFor="let p of plantillas; trackBy: trackByIndex" [value]="p.tipo">
+            {{ p.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);">
+            Fecha inicio <span style="opacity:.5;text-transform:none;">(opc.)</span>
+          </label>
+          <input type="date" [(ngModel)]="formFechaInicio"
+                 style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <label style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-4);">
+            Fecha fin <span style="opacity:.5;text-transform:none;">(opc.)</span>
+          </label>
+          <input type="date" [(ngModel)]="formFechaFin"
+                 style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--ink);font-size:13px;outline:none;width:100%;box-sizing:border-box;font-family:inherit;"/>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;padding:16px 24px;border-top:1px solid var(--border);">
+      <button (click)="cerrarModal()"
+              style="flex:1;background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--ink-4);font-size:13px;cursor:pointer;font-family:var(--mono);letter-spacing:.04em;">
+        Cancelar
+      </button>
+      <button class="qa-btn-primary" style="flex:1;justify-content:center;"
+              (click)="generarReporte()" [disabled]="generando">
+        {{ generando ? 'Generando…' : 'Generar' }}
+      </button>
+    </div>
+  </div>
+</div>

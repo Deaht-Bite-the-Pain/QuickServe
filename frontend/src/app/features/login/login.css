@@ -1,0 +1,25 @@
+/* Field-level validation styles for login */
+
+.qa-field-err {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--danger);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+.qa-field-err svg {
+  flex-shrink: 0;
+}
+
+.qa-input-wrap--err {
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--danger) 15%, transparent);
+}
+
+.qa-input-grp--err label span {
+  color: var(--danger);
+}

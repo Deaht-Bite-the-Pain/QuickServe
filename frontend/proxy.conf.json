@@ -1,6 +1,41 @@
 {
-    "/api/*": {
-        "target": "http://localhost:8080",
+    "/api/inventory": {
+        "target": "http://localhost:8086",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/inventory/**": {
+        "target": "http://localhost:8086",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/menu": {
+        "target": "http://localhost:8083",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/menu/**": {
+        "target": "http://localhost:8083",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/orders/**": {
+        "target": "http://localhost:8082",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/payments/**": {
+        "target": "http://localhost:8084",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/reports/**": {
+        "target": "http://localhost:8085",
+        "secure": false,
+        "changeOrigin": true
+    },
+    "/api/**": {
+        "target": "http://localhost:8081",
         "secure": false,
         "changeOrigin": true
     }

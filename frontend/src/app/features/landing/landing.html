@@ -1,0 +1,428 @@
+<div class="qs-app" [attr.data-theme]="theme">
+
+  <!-- ══ NAV ══════════════════════════════════════════════════════════════ -->
+  <nav class="qs-nav" [class.qs-nav-scrolled]="scrolled">
+    <div class="qs-nav-inner">
+
+      <button class="qs-logo" (click)="scrollTo('top')" style="background:none;border:0;cursor:pointer;display:inline-flex;align-items:center;gap:9px;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:var(--accent);color:var(--bg);border-radius:6px;font-family:var(--serif);font-size:16px;font-style:italic;">Q</span>
+        QuickServe
+      </button>
+
+      <ul class="qs-nav-links">
+        <li><a (click)="scrollTo('top')" style="cursor:pointer;">{{ t.nav.home }}</a></li>
+        <li><a (click)="scrollTo('menu')" style="cursor:pointer;">{{ t.nav.menu }}</a></li>
+        <li><a (click)="scrollTo('features')" style="cursor:pointer;">{{ t.nav.features }}</a></li>
+      </ul>
+
+      <div class="qs-nav-actions">
+        <!-- Language toggle -->
+        <div class="qs-lang">
+          <button [attr.data-active]="lang === 'es' ? 'true' : null" (click)="setLang('es')">ES</button>
+          <span style="opacity:0.3;">|</span>
+          <button [attr.data-active]="lang === 'en' ? 'true' : null" (click)="setLang('en')">EN</button>
+        </div>
+
+        <!-- Theme toggle -->
+        <button class="qs-theme-btn" (click)="toggleTheme()" aria-label="Toggle theme">
+          <span *ngIf="theme === 'dark'">☀</span>
+          <span *ngIf="theme === 'light'">☾</span>
+        </button>
+
+        <!-- Staff login -->
+        <button class="qs-staff" (click)="irLogin()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span>{{ t.nav.staff }}</span>
+        </button>
+
+        <!-- Cart button -->
+        <button class="qs-cart-btn" (click)="cartOpen = true" aria-label="Open cart">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+          <span class="qs-badge" *ngIf="totalQty > 0">{{ totalQty }}</span>
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══════════════════════════════════════════════════════════════ -->
+  <section class="qs-hero" id="top">
+    <div class="qs-hero-grid">
+
+      <!-- Text side -->
+      <div class="qs-hero-text">
+        <p class="qs-eyebrow">
+          <span class="qs-dot"></span>
+          {{ t.hero.eyebrow }}
+        </p>
+        <h1 class="qs-h1">
+          {{ t.hero.title1 }}<br>
+          <em class="qs-italic">{{ t.hero.title2 }}</em>
+        </h1>
+        <p class="qs-lead" style="margin: 24px 0 0;">{{ t.hero.subtitle }}</p>
+        <div class="qs-hero-ctas">
+          <button class="qs-btn qs-btn-primary" (click)="cartOpen = true">{{ t.hero.cta1 }}</button>
+          <button class="qs-btn qs-btn-ghost" (click)="scrollTo('menu')">{{ t.hero.cta2 }}</button>
+        </div>
+        <dl class="qs-hero-meta">
+          <div>
+            <dt>48h</dt>
+            <dd>{{ lang === 'es' ? 'fermentación' : 'fermentation' }}</dd>
+          </div>
+          <div>
+            <dt>~12'</dt>
+            <dd>{{ lang === 'es' ? 'tiempo de entrega' : 'delivery time' }}</dd>
+          </div>
+          <div>
+            <dt>500°C</dt>
+            <dd>{{ lang === 'es' ? 'horno de leña' : 'wood-fired oven' }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Visual side -->
+      <div class="qs-hero-visual">
+        <div class="qs-ph qs-ph-round" style="aspect-ratio:1/1;">
+          <svg width="100%" height="100%" viewBox="0 0 480 480" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="ph-hero" patternUnits="userSpaceOnUse" width="28" height="28" patternTransform="rotate(35)">
+                <rect width="28" height="28" fill="#f5cdb8"/>
+                <rect width="14" height="28" fill="#ebbca0" opacity="0.55"/>
+              </pattern>
+              <clipPath id="clip-hero"><circle cx="240" cy="240" r="240"/></clipPath>
+            </defs>
+            <rect width="480" height="480" fill="url(#ph-hero)" clip-path="url(#clip-hero)"/>
+            <text x="240" y="226" text-anchor="middle" font-family="serif" font-size="110" fill="#c2451e" opacity="0.25">🍕</text>
+            <text x="240" y="290" text-anchor="middle" font-family="sans-serif" font-size="18" fill="#c2451e" opacity="0.38" font-weight="600" letter-spacing="5">QUICKSERVE</text>
+          </svg>
+        </div>
+        <div class="qs-hero-chip">
+          <span class="qs-chip-dot"></span>
+          {{ lang === 'es' ? 'En vivo · Pedidos activos' : 'Live · Active orders' }}
+        </div>
+        <div class="qs-hero-tag">🍕</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ FEATURES ══════════════════════════════════════════════════════════ -->
+  <section class="qs-features" id="features">
+    <div class="qs-section-head">
+      <p class="qs-kicker">{{ t.features.kicker }}</p>
+    </div>
+    <div class="qs-features-grid">
+      <div class="qs-feature" *ngFor="let item of t.features.items">
+        <span class="qs-feature-num">{{ item.num }}</span>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.desc }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MENU ══════════════════════════════════════════════════════════════ -->
+  <section class="qs-menu" id="menu">
+    <div class="qs-section-head" style="margin-bottom: 0;">
+      <p class="qs-kicker">{{ t.menu.kicker }}</p>
+      <h2 class="qs-h2">{{ t.menu.title }}</h2>
+    </div>
+
+    <!-- Category filters -->
+    <div class="qs-filters">
+      <button
+        class="qs-filter"
+        *ngFor="let c of categories"
+        [attr.data-active]="activeCategory === c.id ? 'true' : null"
+        (click)="setCategory(c.id)">
+        {{ lang === 'es' ? c.es : c.en }}
+      </button>
+    </div>
+
+    <!-- Product grid -->
+    <div class="qs-menu-grid" *ngIf="filteredProductos.length > 0; else emptyMenu">
+      <div class="qs-card" *ngFor="let p of filteredProductos">
+
+        <!-- Category photo -->
+        <div class="qs-card-media">
+          <img [src]="getImagenCategoria(p.categoria)"
+               [alt]="p.categoria"
+               style="width:100%;height:100%;object-fit:cover;display:block;"/>
+        </div>
+
+        <!-- Card body -->
+        <div class="qs-card-body">
+          <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-4);">{{ p.categoria }}</span>
+          <h3 class="qs-card-title">{{ p.nombre }}</h3>
+          <p class="qs-card-desc" *ngIf="p.descripcion">{{ p.descripcion }}</p>
+        </div>
+
+        <!-- Card footer -->
+        <div class="qs-card-foot">
+          <span class="qs-price">${{ p.precio | number:'1.2-2' }}</span>
+
+          <!-- Quantity controls (when in cart) -->
+          <div class="qs-qty" *ngIf="getQty(p.id) > 0; else addBtnTpl">
+            <button (click)="removeItem(p.id)" aria-label="Decrease">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+            <span>{{ getQty(p.id) }}</span>
+            <button (click)="addItem(p.id)" aria-label="Increase">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+
+          <ng-template #addBtnTpl>
+            <button class="qs-add" (click)="addItem(p.id)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              {{ lang === 'es' ? 'Agregar' : 'Add' }}
+            </button>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
+
+    <ng-template #emptyMenu>
+      <p style="text-align:center;color:var(--ink-3);padding:48px 32px;font-size:15px;">
+        {{ lang === 'es' ? 'No hay productos en esta categoría.' : 'No products in this category.' }}
+      </p>
+    </ng-template>
+  </section>
+
+  <!-- ══ FINAL CTA ══════════════════════════════════════════════════════════ -->
+  <section class="qs-final-cta">
+    <div class="qs-final-cta-inner">
+      <h2 class="qs-h2">{{ t.cta.title }}</h2>
+      <p>{{ t.cta.sub }}</p>
+      <button class="qs-btn qs-btn-primary" (click)="cartOpen = true">{{ t.cta.btn }}</button>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══════════════════════════════════════════════════════════════ -->
+  <footer class="qs-footer">
+    <div class="qs-footer-grid">
+
+      <div class="qs-footer-brand">
+        <div class="qs-logo" style="display:inline-flex;align-items:center;gap:9px;font-family:var(--serif);font-size:20px;margin-bottom:14px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:var(--accent);color:var(--bg);border-radius:5px;font-style:italic;">Q</span>
+          QuickServe
+        </div>
+        <p class="qs-footer-tag">{{ t.footer.tagline }}</p>
+      </div>
+
+      <div>
+        <span class="qs-footer-h">{{ t.nav.menu }}</span>
+        <div class="qs-social">
+          <a *ngFor="let c of categories" (click)="scrollTo('menu'); setCategory(c.id)" style="cursor:pointer;">
+            {{ lang === 'es' ? c.es : c.en }}
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <span class="qs-footer-h">{{ lang === 'es' ? 'Dónde estamos' : 'Find us' }}</span>
+        <div class="qs-footer-col">
+          <p>{{ t.footer.addr }}</p>
+          <p>{{ t.footer.hours }}</p>
+        </div>
+      </div>
+
+      <div>
+        <span class="qs-footer-h">Legal</span>
+        <div class="qs-social">
+          <a *ngFor="let l of t.footer.legal" href="#">{{ l }}</a>
+        </div>
+      </div>
+
+    </div>
+    <div class="qs-footer-bottom">
+      <span>{{ t.footer.copy }}</span>
+      <span>{{ lang === 'es' ? 'Hecho con ♥ en El Salvador' : 'Made with ♥ in El Salvador' }}</span>
+    </div>
+  </footer>
+
+  <!-- ══ CART ══════════════════════════════════════════════════════════════ -->
+
+  <!-- Scrim -->
+  <div class="qs-scrim" [class.qs-scrim-on]="cartOpen" (click)="cartOpen = false"></div>
+
+  <!-- Cart sidebar -->
+  <aside class="qs-cart" [class.qs-cart-on]="cartOpen" role="dialog" aria-modal="true">
+
+    <!-- Header -->
+    <div class="qs-cart-head">
+      <div>
+        <span class="qs-cart-kicker qs-kicker">{{ lang === 'es' ? 'tu selección' : 'your selection' }}</span>
+        <h2 class="qs-cart-title">{{ t.cart.title }}</h2>
+      </div>
+      <button class="qs-cart-close" (click)="cartOpen = false" aria-label="Close cart">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- ── SUCCESS ─────────────────────────────────────────────────────── -->
+    <div class="qs-cart-success" *ngIf="cartStage === 'success'">
+      <div class="qs-success-check">
+        <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="36" cy="36" r="33" stroke="currentColor" stroke-width="2.5" opacity="0.25"/>
+          <circle cx="36" cy="36" r="33" stroke="currentColor" stroke-width="2.5" class="qs-success-ring"/>
+          <path d="M20 37l12 12 22-24" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" class="qs-success-tick"/>
+        </svg>
+      </div>
+      <h4>{{ t.cart.successTitle }}</h4>
+      <p>{{ t.cart.successSub }}</p>
+      <div class="qs-success-meta">
+        <div>
+          <span class="qs-mono-lbl">{{ t.cart.orderNumber }}</span>
+          <strong>#{{ orderNum }}</strong>
+        </div>
+        <div>
+          <span class="qs-mono-lbl">{{ lang === 'es' ? 'Mesa' : 'Table' }}</span>
+          <strong>#{{ mesaAsignada }}</strong>
+        </div>
+      </div>
+      <button class="qs-btn qs-btn-ghost" style="width:100%;" (click)="startNewOrder()">{{ t.cart.newOrder }}</button>
+    </div>
+
+    <!-- ── IDLE / SENDING ────────────────────────────────────────────── -->
+    <ng-container *ngIf="cartStage !== 'success'">
+
+      <!-- Empty state -->
+      <div class="qs-cart-empty" *ngIf="cartEmpty">
+        <div class="qs-empty-bag">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 0 1-8 0"/>
+          </svg>
+        </div>
+        <h4>{{ t.cart.empty }}</h4>
+        <p>{{ t.cart.emptySub }}</p>
+        <button class="qs-btn qs-btn-ghost" (click)="openCartAndBrowse()">{{ t.cart.browse }}</button>
+      </div>
+
+      <!-- Items + form -->
+      <div class="qs-cart-body" *ngIf="!cartEmpty">
+
+        <!-- Item list -->
+        <ul class="qs-cart-list">
+          <li class="qs-ci" *ngFor="let item of cartItems">
+            <!-- Thumbnail -->
+            <div class="qs-ci-thumb">
+              <img [src]="getImagenCategoria(item.producto.categoria)"
+                   [alt]="item.producto.categoria"
+                   style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;"/>
+            </div>
+
+            <!-- Info -->
+            <div class="qs-ci-body">
+              <h4>{{ item.producto.nombre }}</h4>
+              <span class="qs-ci-price">${{ item.producto.precio | number:'1.2-2' }} × {{ item.cantidad }}</span>
+            </div>
+
+            <!-- Qty controls -->
+            <div class="qs-ci-qty">
+              <button (click)="removeItem(item.producto.id)" aria-label="Decrease">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+              <span>{{ item.cantidad }}</span>
+              <button (click)="addItem(item.producto.id)" aria-label="Increase">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </li>
+        </ul>
+
+        <!-- Totals -->
+        <div class="qs-cart-totals">
+          <div>
+            <span>{{ t.cart.subtotal }}</span>
+            <span>${{ subtotal | number:'1.2-2' }}</span>
+          </div>
+          <div>
+            <span>{{ t.cart.service }} <em>(10%)</em></span>
+            <span>${{ serviceFee | number:'1.2-2' }}</span>
+          </div>
+          <div class="qs-cart-grand">
+            <span>{{ t.cart.total }}</span>
+            <span>${{ cartTotal | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <!-- Form fields -->
+        <fieldset class="qs-cart-fields">
+
+          <!-- Name -->
+          <div class="qs-field" [class.qs-field-err]="cartErrors.nombre">
+            <span>{{ t.cart.yourName }}</span>
+            <input
+              type="text"
+              [placeholder]="t.cart.namePh"
+              [(ngModel)]="clienteNombre"
+              [disabled]="cartStage === 'sending'"
+              (blur)="validateNombre()"
+              (input)="cartErrors.nombre = undefined"
+            />
+            <small *ngIf="cartErrors.nombre">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ cartErrors.nombre }}
+            </small>
+          </div>
+
+          <!-- Mesa automática — informativo -->
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-sm);background:color-mix(in oklab,var(--accent) 8%,transparent);border:1px dashed color-mix(in oklab,var(--accent) 30%,transparent);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" style="flex-shrink:0;">
+              <rect x="2" y="6" width="20" height="14" rx="2"/>
+              <path d="M2 10h20M7 6V4M17 6V4"/>
+            </svg>
+            <span style="font-size:12px;color:var(--ink-3);line-height:1.4;">
+              {{ lang === 'es'
+                ? 'Tu mesa se asigna automáticamente al confirmar el pedido.'
+                : 'Your table is assigned automatically when you confirm.' }}
+            </span>
+          </div>
+
+        </fieldset>
+
+        <!-- Send button -->
+        <button
+          class="qs-send"
+          [attr.data-loading]="cartStage === 'sending' ? 'true' : null"
+          [disabled]="cartStage === 'sending'"
+          (click)="submitCart()">
+
+          <ng-container *ngIf="cartStage !== 'sending'">
+            {{ t.cart.send }}
+            <span class="qs-send-count">{{ totalQty }}</span>
+          </ng-container>
+
+          <ng-container *ngIf="cartStage === 'sending'">
+            <span class="qs-spinner"></span>
+            {{ t.cart.sending }}
+          </ng-container>
+        </button>
+
+      </div><!-- /qs-cart-body -->
+    </ng-container>
+
+  </aside>
+
+</div><!-- /qs-app -->
